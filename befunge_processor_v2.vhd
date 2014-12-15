@@ -284,70 +284,70 @@ begin
                             FDE_OUT <= X"03";
                             
 							grid_load <= '0';
-							case char_op is
+
 --*********************************************Load Literal************************************************************
-                                when '0' =>
+                                if ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('0'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(0, word_size));
                                     push_flag := '1';
                                     
-                                when '1' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('1'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(1, word_size));
                                     push_flag := '1';
                                     
-                                when '2' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('2'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(2, word_size));
                                     push_flag := '1';
                                     
-                                when '3' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('3'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(3, word_size));
                                     push_flag := '1';
                                     
-                                when '4' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('4'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(4, word_size));
                                     push_flag := '1';
                                     
-                                when '5' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('5'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(5, word_size));
                                     push_flag := '1';
                                     
-                                when '6' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('6'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(6, word_size));
                                     push_flag := '1';
                                     
-                                when '7' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('7'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(7, word_size));
                                     push_flag := '1';
                                     
-                                when '8' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('8'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(8, word_size));
                                     push_flag := '1';
                                     
-                                when '9' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('9'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(9, word_size));
                                     push_flag := '1';
 --*********************************************Alu ops*****************************************************************
-                                when '+' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('+'), word_size))) then
                                     alu_op <= "000";
                                     alu_en <= '1';
                                     fde_cycle <= alu_0;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
-                                when '-' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('-'), word_size))) then
                                     alu_op <= "001";
                                     alu_en <= '1';
                                     fde_cycle <= alu_0;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
-                                when '*' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('*'), word_size))) then
                                     alu_op <= "010";
                                     alu_en <= '1';
                                     fde_cycle <= alu_0;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
-                                when '/' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('/'), word_size))) then
                                     alu_op <= "011";
                                     alu_en <= '1';
                                     push_flag := '1';
@@ -355,7 +355,7 @@ begin
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
-                                when '%' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('%'), word_size))) then
                                     alu_op <= "100";
                                     alu_en <= '1';
                                     push_flag := '1';
@@ -363,7 +363,7 @@ begin
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
-                                when '!' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('!'), word_size))) then
                                     alu_op <= "101";
                                     alu_en <= '1';
                                     push_flag := '1';
@@ -371,7 +371,7 @@ begin
                                     stack_en <= '1';
                                     stack_pop1 <= '1';
                                     
-                                when 'a' =>
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('a'), word_size))) then
                                     alu_op <= "110";
                                     alu_en <= '1';
                                     push_flag := '1';
@@ -380,32 +380,32 @@ begin
                                     stack_pop1 <= '1';
 
 --*********************************************Control flow************************************************************
-								when '<' => --move left!!
+								elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('<'), word_size))) then --move left!!
                                     INSTRUCTION_OUT <= X"00";
 									dir <= "10";
                                     
 									--fde_cycle <= nop;
 									--fde_previous <= idle;
-								when '>' => --move right!!
+								elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('>'), word_size))) then --move right!!
                                     INSTRUCTION_OUT <= X"01";
 									dir <= "00";
 									--fde_cycle <= nop;
 									--fde_previous <= idle;
-								when '^' => --move up!!
+								elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('^'), word_size))) then --move up!!
                                     INSTRUCTION_OUT <= X"02";
 									dir <= "01";
 									--fde_cycle <= nop;
 									--fde_previous <= idle;
-								when 'v' => --move down!!
+								elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('v'), word_size))) then --move down!!
                                     INSTRUCTION_OUT <= X"03";
 									dir <= "11";
 									--fde_cycle <= nop;
 									--fde_previous <= idle;
-								when others =>
+								else
                                     INSTRUCTION_OUT <= X"04";
 									--fde_cycle <= nop;
 									--fde_previous <= idle;
-							end case;
+							end if;
 							--fed_cycle <= idle;
                             
                         when alu_0 =>
