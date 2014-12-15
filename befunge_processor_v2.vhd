@@ -161,8 +161,6 @@ architecture processor_v1 of befunge_processor_v2 is
     signal alu_en           : std_logic;
     signal alu_working      : std_logic;
     
-    signal char_op          : character;
-    
 begin
 
 	
@@ -448,7 +446,6 @@ begin
                 if (grid_load = '1') then
 					INSTRUCTION_OUT <= X"FF";
                     grid_data_out <= grid(to_integer(unsigned(grid_address)));
-                    char_op <= character'val(to_integer(unsigned(grid(to_integer(unsigned(grid_address))))));
                 --else
                   --  grid_data_out <= grid(pc_address);
                 end if;
