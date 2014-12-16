@@ -102,14 +102,14 @@ architecture processor_v1 of befunge_processor_v2 is
 
 
 
-
+    constant word_zero : std_logic_vector(word_size -1 downto 0) := (others => '0');
 	
 --((grid_height*grid_width)-1 downto 0)
 	type grid_declaration is array(0 to (2**grid_power*2**grid_power)-1) of std_logic_vector(word_size-1 downto 0);
 	signal grid : grid_declaration := 
 	(
 	std_logic_vector(to_unsigned(character'pos('>'),word_size)),std_logic_vector(to_unsigned(character'pos('1'),word_size)),std_logic_vector(to_unsigned(character'pos('v'),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),
-	std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos('>'),word_size)),std_logic_vector(to_unsigned(character'pos('1'),word_size)),std_logic_vector(to_unsigned(character'pos('+'),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),
+	std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos('>'),word_size)),std_logic_vector(to_unsigned(character'pos('1'),word_size)),std_logic_vector(to_unsigned(character'pos('+'),word_size)),std_logic_vector(to_unsigned(character'pos('6'),word_size)),std_logic_vector(to_unsigned(character'pos('3'),word_size)),std_logic_vector(to_unsigned(character'pos('/'),word_size)),
 	std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),
 	std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),
 	std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),
@@ -399,6 +399,28 @@ begin
 									dir <= "11";
 									--fde_cycle <= nop;
 									--fde_previous <= idle;
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('|'), word_size))) then --verticle switch!!
+                                    fde_cycle <= step;
+                                    stack_en <= '1';
+                                    stack_pop1 <= '1';
+                                    
+                                    if ( stack_0 = word_zero ) then
+                                        dir <= "11";
+                                    else
+                                        dir <= "01";
+                                    end if;
+                                    
+								elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('_'), word_size))) then --horizontal switch!!
+                                    fde_cycle <= step;
+                                    stack_en <= '1';
+                                    stack_pop1 <= '1';
+                                    
+                                    if ( stack_0 = word_zero ) then
+                                        dir <= "00";
+                                    else
+                                        dir <= "10";
+                                    end if;
+                                    
 								else
                                     INSTRUCTION_OUT <= X"04";
 									--fde_cycle <= nop;
