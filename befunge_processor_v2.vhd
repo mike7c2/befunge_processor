@@ -161,6 +161,7 @@ architecture processor_v1 of befunge_processor_v2 is
     signal alu_en           : std_logic;
     signal alu_working      : std_logic;
     
+    signal string_mode      : std_logic;
 begin
 
 	
@@ -244,6 +245,8 @@ begin
             stack_pop2 <= '0';        
             stack_push <= '0';
             stack_swap <= '0';
+            string_mode <= '0';
+            pc_skip <= '0';
             dir <= "00";
             grid_data_out <= grid(0);
 	    else
@@ -257,6 +260,7 @@ begin
 						when idle =>
                             FDE_OUT <= X"00";
 							pc_enable <= '0';
+                            pc_skip <= '0';
 							grid_load <= '0';
                             push_flag := '0';
                             stack_push <= '0';
@@ -264,6 +268,7 @@ begin
                             stack_pop1 <= '0';
                             stack_pop2 <= '0';
                             stack_swap <= '0';
+                            
                             alu_en <= '0';
                             
 							fde_cycle <= fetch;
@@ -282,7 +287,7 @@ begin
                             FDE_OUT <= X"03";
                             
 							grid_load <= '0';
-
+                            if (string_mode = '0' ) then
 --*********************************************Load Literal************************************************************
                                 if ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('0'), word_size))) then
                                     stack_i <= std_logic_vector(to_unsigned(0, word_size));
@@ -369,7 +374,7 @@ begin
                                     stack_en <= '1';
                                     stack_pop1 <= '1';
                                     
-                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('a'), word_size))) then
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('''), word_size))) then
                                     alu_op <= "110";
                                     alu_en <= '1';
                                     push_flag := '1';
@@ -421,13 +426,52 @@ begin
                                         dir <= "10";
                                     end if;
                                     
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('?'), word_size))) then --move in random direction
+                                    fde_cycle <= step;
+                                    dir <= "10"; --High quality random number obtained using http://www.random.org/integers/
+                                    
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos(':'), word_size))) then --duplicate stack
+                                    fde_cycle <= step;
+                                    
+                                    stack_i <= stack_0;
+                                    push_flag := '1';
+                                    
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('\'), word_size))) then --swap stack
+                                    fde_cycle <= step;
+                                    
+                                    stack_en <= '1';
+                                    stack_swap <= '1';
+                                    
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('$'), word_size))) then --discard stack
+                                    fde_cycle <= step;
+                                    stack_en <= '1';
+                                    stack_pop1 <= '1';
+                                    
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('$'), word_size))) then --trampoline
+                                    fde_cycle <= step;
+                                    pc_skip <= '1';
+                                    
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('"'), word_size))) then --String mode
+                                    fde_cycle <= step;
+                                    
+                                    
+                                    
 								else
                                     INSTRUCTION_OUT <= X"04";
 									--fde_cycle <= nop;
 									--fde_previous <= idle;
-							end if;
-							--fed_cycle <= idle;
+                                end if;
+                            else -- string mode
                             
+                                fde_cycle <= step;
+                                if ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('"'), word_size))) then -- end string mode
+                                    string_mode <= '0';
+                                else
+                                    push_flag := '1';
+                                    stack_i <= grid_data_out;
+                                end if;
+                            end if;
+                                
                         when alu_0 =>
                             FDE_OUT <= X"04";
                             alu_en <= '0';
@@ -452,7 +496,13 @@ begin
                                 stack_en <= '1';
                                 stack_push <= '1';
                                 push_flag := '0';
+                            else
+                                stack_en <= '0';
                             end if;
+                            
+                            stack_pop1 <= '0';
+                            stack_pop2 <= '0';
+                            stack_swap <= '0';
                             
 						    FDE_OUT <= X"06";
 							grid_load <= '0';
