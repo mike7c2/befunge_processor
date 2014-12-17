@@ -453,7 +453,7 @@ begin
                                     
                                 elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('"'), word_size))) then --String mode
                                     fde_cycle <= step;
-                                    
+                                    string_mode <= '0';
                                     
                                     
 								else
