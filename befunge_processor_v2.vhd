@@ -105,7 +105,7 @@ architecture processor_v1 of befunge_processor_v2 is
     constant word_zero : std_logic_vector(word_size -1 downto 0) := (others => '0');
 	
 --((grid_height*grid_width)-1 downto 0)
-	type grid_declaration is array(0 to (2**grid_power*2**grid_power)-1) of std_logic_vector(word_size-1 downto 0);
+	type grid_declaration is array(0 to (2**(grid_power*2))-1) of std_logic_vector(word_size-1 downto 0);
 	signal grid : grid_declaration := 
 	(
 	std_logic_vector(to_unsigned(character'pos('>'),word_size)),std_logic_vector(to_unsigned(character'pos('1'),word_size)),std_logic_vector(to_unsigned(character'pos('v'),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),std_logic_vector(to_unsigned(character'pos(' '),word_size)),
@@ -127,17 +127,16 @@ architecture processor_v1 of befunge_processor_v2 is
 	-- |
 	--(x,y) is therefore x+(y*grid_width), which makes hardware a little more complex :(
 	
-	type fde_cycle_states is (idle,fetch,decode,execute,step,nop, alu, alu_0);
+	type fde_cycle_states is (idle,fetch,decode,execute,step,nop, alu, alu2, get, get2, put, put2);
 	signal fde_cycle,fde_previous : fde_cycle_states := idle;
-	 
-	type befunge_instruction_set is (move_left,move_right,move_up,move_down);
-	signal instruction : befunge_instruction_set;
 	 
     signal grid_data_in,grid_data_out   : std_logic_vector(word_size-1 downto 0);
 	 
     signal grid_address    : std_logic_vector((grid_power * 2)-1 downto 0);
     signal grid_load       : std_logic;
     signal grid_store      : std_logic;
+    signal grid_access     : std_logic;
+    signal grid_access_address : std_logic_vector((grid_power * 2)-1 downto 0);
 
     signal dir             : std_logic_vector(1 downto 0);
 
@@ -168,7 +167,7 @@ begin
 --DEBUG
 	GRID_ADDRESS_OUT <= grid_address;
 	data_out 		<= grid_data_out;
-	grid_data_in 	<= data_in;
+--	grid_data_in 	<= data_in;
 --DEBUG
 	
     alu_inst : befunge_alu
@@ -228,7 +227,8 @@ begin
 	
 --Can't do that any more :(
 	--TODO : this shit needs casted
-	grid_address <= pc_address;--to_integer(signed(stack_top));
+	grid_address <= pc_address when grid_access = '0' else grid_access_address;--to_integer(signed(stack_top));
+    
 	--grid_address_y <= stack_s1;
 	
     
@@ -236,7 +236,7 @@ begin
 	--The grid must handle a write from a store instruction 
 	--the grid must handle a read from the pc address
 	--the grid must handle a read from a load instruction
-	grid_process : process(reset,clk, grid_store,instruction)	
+	grid_process : process(reset,clk)	
         variable push_flag : std_logic := '0';
 	begin
 	    if(reset = '1') then
@@ -248,7 +248,7 @@ begin
             string_mode <= '0';
             pc_skip <= '0';
             dir <= "00";
-            grid_data_out <= grid(0);
+            --grid_data_out <= grid(0);
 	    else
 		    if rising_edge(clk) then
 					--set all signals inside this and we're laughing
@@ -332,21 +332,21 @@ begin
                                 elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('+'), word_size))) then
                                     alu_op <= "000";
                                     alu_en <= '1';
-                                    fde_cycle <= alu_0;
+                                    fde_cycle <= alu;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
                                 elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('-'), word_size))) then
                                     alu_op <= "001";
                                     alu_en <= '1';
-                                    fde_cycle <= alu_0;
+                                    fde_cycle <= alu;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
                                 elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('*'), word_size))) then
                                     alu_op <= "010";
                                     alu_en <= '1';
-                                    fde_cycle <= alu_0;
+                                    fde_cycle <= alu;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
@@ -354,7 +354,7 @@ begin
                                     alu_op <= "011";
                                     alu_en <= '1';
                                     push_flag := '1';
-                                    fde_cycle <= alu_0;
+                                    fde_cycle <= alu;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
@@ -362,7 +362,7 @@ begin
                                     alu_op <= "100";
                                     alu_en <= '1';
                                     push_flag := '1';
-                                    fde_cycle <= alu_0;
+                                    fde_cycle <= alu;
                                     stack_en <= '1';
                                     stack_pop2 <= '1';
                                     
@@ -370,7 +370,7 @@ begin
                                     alu_op <= "101";
                                     alu_en <= '1';
                                     push_flag := '1';
-                                    fde_cycle <= alu_0;
+                                    fde_cycle <= alu;
                                     stack_en <= '1';
                                     stack_pop1 <= '1';
                                     
@@ -378,7 +378,7 @@ begin
                                     alu_op <= "110";
                                     alu_en <= '1';
                                     push_flag := '1';
-                                    fde_cycle <= alu_0;
+                                    fde_cycle <= alu;
                                     stack_en <= '1';
                                     stack_pop1 <= '1';
 
@@ -455,6 +455,24 @@ begin
                                     fde_cycle <= step;
                                     string_mode <= '1';
                                     
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('p'), word_size))) then --put
+                                    fde_cycle <= put;
+                                    
+                                    grid_access_address((grid_power * 2)-1 downto ((grid_power*2)/2)) <= stack_0(grid_power-1 downto 0);
+                                    grid_access_address(((grid_power * 2)/2)-1 downto 0) <= stack_1(grid_power-1 downto 0);
+                                    
+                                    grid_access <= '1';
+                                    stack_pop2 <= '1';
+                                    stack_en <= '1';
+                                    
+                                elsif ( grid_data_out = std_logic_vector(to_Unsigned(character'pos('g'), word_size))) then --get
+                                    fde_cycle <= get;
+                                    grid_access <= '1';
+                                    stack_pop2 <= '1';
+                                    stack_en <= '1';
+                                    
+                                    grid_access_address((grid_power * 2)-1 downto ((grid_power*2)/2)) <= stack_0(grid_power-1 downto 0);
+                                    grid_access_address(((grid_power * 2)/2)-1 downto 0) <= stack_1(grid_power-1 downto 0);
                                     
 								else
                                     INSTRUCTION_OUT <= X"04";
@@ -472,15 +490,15 @@ begin
                                 end if;
                             end if;
                                 
-                        when alu_0 =>
+                        when alu =>
                             FDE_OUT <= X"04";
                             alu_en <= '0';
                             stack_en <= '0';
                             stack_pop1 <= '0';
                             stack_pop2 <= '0';
-                            fde_cycle <= alu;
+                            fde_cycle <= alu2;
                             
-                        when alu =>
+                        when alu2 =>
                             FDE_OUT <= X"05";
 
                             if ( alu_working = '0' ) then
@@ -491,6 +509,30 @@ begin
                                 fde_cycle <= alu;
                             end if;
                             
+                        when get =>
+                            fde_cycle <= get2;
+                            stack_en <= '0';
+                            stack_pop2 <= '0';
+                            grid_load <= '1';
+                            
+                        when get2 =>
+                            fde_cycle <= step;
+                            stack_i <= grid_data_out;
+                            grid_load <= '0';
+                            push_flag := '1';
+                            
+                        when put =>
+                            fde_cycle <= put2;
+                            stack_en <= '1';
+                            stack_pop1 <= '1';
+                            grid_data_in <= stack_0;
+                        
+                        when put2 =>
+                            fde_cycle <= step;
+                            stack_en <= '0';
+                            stack_pop1 <= '0';
+                            grid_store <= '1';
+                        
                         when step =>
                             if ( push_flag = '1' ) then
                                 stack_en <= '1';
@@ -506,9 +548,14 @@ begin
                             
 						    FDE_OUT <= X"06";
 							grid_load <= '0';
+                            grid_store <= '0';
                             pc_enable <= '1';
 							fde_cycle <= idle;
+                            grid_access <= '0';
 					end case;
+                    
+                    
+                    
 		        --only write the grid when the grid_store flag is enabled
                 if (grid_store = '1') then
 					INSTRUCTION_OUT <= X"AD";
@@ -526,27 +573,5 @@ begin
 	    end if;
 	end process;
 		
-	process(reset,clk,instruction,grid_data_out)
-	begin
-	    if(reset = '1') then
-			instruction <= move_right;
-	    else
-		    if rising_edge(clk) then
-				case grid_data_out(7 downto 0) is
-					when X"3E" => --move right!!
-						instruction <= move_right;
-					when X"3C" => --move left!!
-						instruction <= move_left;
-					when X"5E" => --move up!!
-						instruction <= move_up;
-					when X"4C" => --move down!!
-						instruction <= move_down;
-					when others =>
-						instruction <= move_right;
-				end case;
-		    end if;
-	    end if;
-    end process;
-
 end processor_v1;
 
